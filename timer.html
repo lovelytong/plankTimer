@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <style>
+        [v-cloak] {
+            display: none;
+        }
+        .block {
+            width: 800px;
+            height: 600px;
+            background-color: aliceblue;
+            margin: 100px auto 0;
+            padding: 50px;
+        }
+        .circle-plank {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background-color: #50C9C2;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 50px;
+            margin: 120px auto 0;
+            font-weight: bolder;
+            flex-direction: column;
+        }
+        .circle-rest {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background-color: lavender;
+            color: black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 50px;
+            margin: 120px auto 0;
+            font-weight: bolder;
+            flex-direction: column;
+        }
+        .control {
+            margin: 150px auto 0;
+            text-align: center;
+        }
+        .text {
+            font-size: 16px;
+        }
+        .controller {
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+
+        }
+
+        .controller span {
+            color: #409EFF;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="block" id="app" v-cloak>
+
+        <h1>平板支撑计时器</h1>
+        <audio src="countdown.mp3"  ref="countdown"></audio>
+        <div class="controller">
+            <div>
+                <span>每组时间</span>
+                <el-input-number
+                        v-model="plankTime"
+                        :min="10"
+                        :max="60"
+                        label="每组时间"
+                        :step="10"
+                        size="small"
+                ></el-input-number>
+            </div>
+            <div>
+                <span>共多少组</span>
+                <el-input-number
+                        v-model="groups"
+                        :min="1"
+                        :max="10"
+                        :step="1"
+                        size="small"
+                ></el-input-number>
+            </div>
+            <div>
+                <span>休息时间</span>
+                <el-input-number
+                        v-model="restTime"
+                        :min="10"
+                        :max="60"
+                        :step="10"
+                        size="small"
+                ></el-input-number>
+            </div>
+        </div>
+
+
+
+        <div class="circle-plank" v-if="show">
+            <div class="text" v-if="textShow">进行中...</div>
+            <div>{{plankCount}}</div>
+        </div>
+        <div class="circle-rest" v-if="!show">
+            <div class="text">休息</div>
+            <div>{{restCount}}</div>
+        </div>
+        <div class="control">
+            <el-button @click="start" type="primary" v-show="startButtonShow">开始</el-button>
+            <el-button @click="reset" type="primary">结束</el-button>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.5.17/dist/vue.js"></script>
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+
+    <script>
+        new Vue({
+            el: '#app',
+            data: {
+                timerPlank: null,
+                timerRest: null,
+                show: true,
+                plankTime: 10,
+                groups: 1,
+                restTime: 10,
+                plankCount: 0,
+                restCount: 0,
+                startButtonShow: true,
+                groupsCopy: null,
+                textShow: false
+            },
+            methods: {
+                start () {
+                    this.textShow = true
+                    this.startButtonShow = false
+                    this.plankCount = this.plankTime
+                    this.restCount = this.restTime
+                    this.groupsCopy = this.groups
+                    this.plankPart()
+                },
+                plankPart () {
+                    this.timerPlank = setInterval(() => {
+                        let audio = this.$refs.countdown
+                        this.plankCount --
+                        if (this.plankCount === 6) {
+                            audio.play()
+                        }
+                        if ( this.plankCount === 0) {
+                            audio.pause()
+                            audio.load()
+                            this.plankCount = this.plankTime
+                            clearInterval(this.timerPlank)
+                            if(this.groupsCopy > 1) {
+                                this.show = !this.show
+                                this.restPart()
+                            } else {
+                                this.reset()
+                            }
+                        }
+                    },1000)
+                },
+                restPart () {
+                    this.timerRest = setInterval(() => {
+                        let audio = this.$refs.countdown
+                        this.restCount --
+                        if (this.restCount === 6) {
+                            audio.play()
+                        }
+                        if ( this.restCount === 0) {
+                            audio.pause()
+                            audio.load()
+                            this.restCount = this.restTime
+                            clearInterval(this.timerRest)
+                            this.groupsCopy--
+                            if(this.groupsCopy > 0) {
+                                this.show = !this.show
+                                this.plankPart()
+                            }
+
+                        }
+                    },1000)
+                },
+                reset () {
+                    this.startButtonShow = true
+                    clearInterval(this.timerRest)
+                    clearInterval(this.timerPlank)
+                    this.plankCount = 0
+                    this.restCount = 0
+                    this.textShow = false
+                }
+            }
+        })
+    </script>
+</body>
+</html>
